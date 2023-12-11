@@ -22,6 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       name: ${{ steps.payu.outputs.name }}
+      version: ${{ steps.payu.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
@@ -66,11 +67,11 @@ jobs:
         deployment-environment: ${{ fromJson(needs.setup-deployment-env.outputs.deployment-environments) }}
     environment: ${{ matrix.deployment-environment }}
     env:
-      name: ${{ needs.pack.outputs.name }}
+      NAME: ${{ needs.pack.outputs.name }}
     steps:
       - uses: actions/download-artifact@v3.0.2
         with:
-          name: ${{ env.name }}
+          name: ${{ env.NAME }}
 
       - uses: access-nri/actions/.github/actions/setup-ssh@main
         id: ssh
@@ -83,13 +84,32 @@ jobs:
       - name: Copy to ${{ matrix.deployment-environment }}
         run: |
           rsync -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
-            ${{ env.name }}.tar.gz \
+            ${{ env.NAME }}.tar.gz \
             ${{ secrets.USER }}@${{ secrets.HOST_DATA }}:${{ vars.PACK_LOCATION }}
 
       - name: Deploy to ${{ matrix.deployment-environment }}
+        env:
+          PAYU_ENVIRONMENT_LOCATION: ${{ vars.DEPLOYMENT_LOCATION }}/${{ env.NAME }}
         run: |
           ssh ${{ secrets.USER }}@${{ secrets.HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash <<'EOT'
-          ls ${{ vars.PACK_LOCATION }}
+          mkdir ${{ env.PAYU_ENVIRONMENT_LOCATION }}
+          if [ -n "$?" ]; then
+            exit $?
+          fi
+          tar -xzf ${{ vars.PACK_LOCATION }}/${{ env.NAME }}.tar.gz -C ${{ env.PAYU_ENVIRONMENT_LOCATION }}
+          source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/activate
+          payu --version
+          source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/deactivate
           EOT
 
-      # Release stuff after
+      # Release
+      - name: Create Release
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          tag_name: ${{ needs.pack.outputs.version }}
+          name: Payu ${{ needs.pack.outputs.version }}
+          generate_release_notes: true
+          fail_on_unmatched_files: true
+          files: |
+            ${{ env.NAME }}.tar.gz
+            ${{ env.NAME }}.conda-lock.yml
