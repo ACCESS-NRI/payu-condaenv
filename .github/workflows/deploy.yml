@@ -68,6 +68,7 @@ jobs:
     environment: ${{ matrix.deployment-environment }}
     env:
       NAME: ${{ needs.pack.outputs.name }}
+      VERSION: ${{ needs.pack.outputs.version }}
     steps:
       - uses: actions/download-artifact@v3.0.2
         with:
@@ -89,7 +90,7 @@ jobs:
 
       - name: Deploy to ${{ matrix.deployment-environment }}
         env:
-          PAYU_ENVIRONMENT_LOCATION: ${{ vars.DEPLOYMENT_LOCATION }}/${{ env.NAME }}
+          PAYU_ENVIRONMENT_LOCATION: ${{ vars.DEPLOYMENT_LOCATION }}/${{ env.VERSION }}
         run: |
           ssh ${{ secrets.USER }}@${{ secrets.HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash <<'EOT'
           mkdir ${{ env.PAYU_ENVIRONMENT_LOCATION }}
@@ -100,14 +101,15 @@ jobs:
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/activate
           payu --version
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/deactivate
+          ln -s ${{ env.MODULE_LOCATION }}/.common ${{ env.MODULE_LOCATION }}/${{ env.VERSION }}
           EOT
 
       # Release
       - name: Create Release
         uses: softprops/action-gh-release@v0.1.15
         with:
-          tag_name: ${{ needs.pack.outputs.version }}
-          name: Payu ${{ needs.pack.outputs.version }}
+          tag_name: ${{ env.VERSION }}
+          name: Payu ${{ env.VERSION }}
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
