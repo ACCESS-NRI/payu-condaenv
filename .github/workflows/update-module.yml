@@ -21,6 +21,6 @@ jobs:
 
       - name: Copy modulefiles to Gadi
         run: |
-          rsync -rvp -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \ 
-            modules/  \
+          rsync -rvp -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
+            modules/ \
             ${{ secrets.USER }}@${{ secrets.HOST_DATA }}:${{ vars.MODULE_LOCATION }}
