@@ -1,5 +1,6 @@
 name: Update common modulefiles on Gadi
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
