@@ -69,6 +69,8 @@ jobs:
     env:
       NAME: ${{ needs.pack.outputs.name }}
       VERSION: ${{ needs.pack.outputs.version }}
+    permissions:
+      contents: write
     steps:
       - uses: actions/download-artifact@v3.0.2
         with:
@@ -113,5 +115,5 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: true
           files: |
-            ${{ env.NAME }}.tar.gz
-            ${{ env.NAME }}.conda-lock.yml
+            ./${{ env.NAME }}.tar.gz
+            ./${{ env.NAME }}.conda-lock.yml
