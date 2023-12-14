@@ -94,14 +94,14 @@ jobs:
         run: |
           ssh ${{ secrets.USER }}@${{ secrets.HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash <<'EOT'
           mkdir ${{ env.PAYU_ENVIRONMENT_LOCATION }}
-          if [ -n "$?" ]; then
+          if [ $? -ne 0 ]; then
             exit $?
           fi
           tar -xzf ${{ vars.PACK_LOCATION }}/${{ env.NAME }}.tar.gz -C ${{ env.PAYU_ENVIRONMENT_LOCATION }}
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/activate
           payu --version
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/deactivate
-          ln -s ${{ env.MODULE_LOCATION }}/.common ${{ env.MODULE_LOCATION }}/${{ env.VERSION }}
+          ln -s ${{ vars.MODULE_LOCATION }}/.common ${{ vars.MODULE_LOCATION }}/${{ env.VERSION }}
           EOT
 
       # Release
