@@ -1,57 +1,47 @@
-# General Repository Template
+# payu-condaenv
 
-A general template repository for default settings when creating new repositories.
+## Overview
 
-This repository uses the Apache-2.0 license. `COPYRIGHT.txt` contains a current copyright statement which should be included at the top of all files.
+This repository is responsible for building, packaging and deploying [`payu`](https://github.com/payu-org/payu) as a [`micromamba` environment](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
 
-When creating a new repository you [can use this repository as a template](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-repository-from-a-template), to automate the creation of the correct license and COPYRIGHT statement.
+## Usage
 
-## COPYRIGHT Header
+### Triggering a Deployment
 
-Best practice suggests adding a copyright statement at the top of every source code file, or text file where it is possible to add a copyright statement without interfering with the purpose of the file. The reasoning is if a file is separated from the repository in which it resides then it may not be possible to ascertain it's licensing, which may hamper re-use.
+In order to trigger a deployment, some steps must be followed:
 
-Making this as short and concise as possible reduces the overhead in including such a copyright statement. To that end using [SPDX identifiers](https://spdx.dev/ids/) is simple, efficient, portable and machine-readable.
+* First, check that a new version of `payu` has been added to the [`accessnri` conda channel](https://anaconda.org/accessnri/payu/files). This is done via CD on the `payu-org/payu` repository when a new tag is pushed.
+* Open a PR modifying the `env.yml` file to refer to the newly updated version of `payu`. The `env.yml` will be checked for validity and that the version of `payu` is defined.
+* When this is merged, the `env.yml` will be used to create a `micromamba` environment. This is then packaged using `conda-pack`, and deployed to the appropriate targets (eg. Gadi).
 
-### Examples
+### Using the Deployed `Payu`
 
-An example, short, copyright statement is reproduced below, as it might appear in different coding languages. Copy and add to files as appropriate: 
+On all of the deployment targets, the deployed `Payu`  environment can be activated using Environment Modules.
 
-#### plaintext
-It is common to include copyright statements at the bottom of a text document or website page
-```text
-© 2022 ACCESS-NRI and contributors. See the top-level COPYRIGHT file for details. 
-SPDX-License-Identifier: Apache-2.0
-```
+#### Gadi
 
-#### python
-For code it is more common to include the copyright in a comment at the top
-```python
-# Copyright 2022 ACCESS-NRI and contributors. See the top-level COPYRIGHT file for details.
-# SPDX-License-Identifier: Apache-2.0
-```
+Make sure you're a member of the `vk83` project! If not, see [how to join an NCI project](https://access-hive.org.au/getting_started/first_steps/#join-relevant-nci-projects).
 
-#### shell
+**Important**: make sure you do not have another conda environment active - either run `conda deactivate` or `module unload` any modules that are using conda.
+
+Once you are a member, run the following:
+
 ```bash
-# Copyright 2022 ACCESS-NRI and contributors. See the top-level COPYRIGHT file for details.
-# SPDX-License-Identifier: Apache-2.0
+module use /g/data/vk83/modules
+module load payu/VERSION
 ```
 
-##### FORTRAN
-```fortran
-! Copyright 2022 ACCESS-NRI and contributors. See the top-level COPYRIGHT file for details.
-! SPDX-License-Identifier: Apache-2.0
-```
+`Payu` can then be invoked with `payu COMMAND`. See `payu --help` for more information.
 
-#### C/C++ 
-```c
-// Copyright 2022 ACCESS-NRI and contributors. See the top-level COPYRIGHT file for details.
-// SPDX-License-Identifier: Apache-2.0
-```
+## Notes
 
-### Notes
+### On Future Deployment Environments
 
-Note that the date is the first time the project is created. 
+New deployment environments must be created as a GitHub Environment and also have an entry in the `config/deployment-environment.json` file.
 
-The date signifies the year from which the copyright notice applies. **NEVER** replace with a later year, only ever add later years or a year range. 
+### Deploying locally
 
-It is not necessary to include subsequent years in the copyright statement at all unless updates have been made at a later time, and even then it is largely discretionary: they are not necessary as copyright is contingent on the lifespan of copyright holder +50 years as per the [Berne Convention](https://en.wikipedia.org/wiki/Berne_Convention).
+To deploy locally, you can use the assets created in the release. [Releases are found here](https://github.com/ACCESS-NRI/payu-condaenv/releases). Specifically:
+
+* To use the compressed environment (which doesn't require conda or python) you can run `tar -xzf payu-VERSION.tar.gz payu-VERSION` and then `./payu-VERSION/bin/activate` to activate the environment.
+* To use the lockfile, you can run `micromamba create -n my-environment -f payu-VERSION.conda-lock.yml` with an appropriate install of `micromamba`.
