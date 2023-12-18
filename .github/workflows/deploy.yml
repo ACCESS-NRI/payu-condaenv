@@ -1,8 +1,10 @@
 name: Deploy
 on:
-  # TODO: Determine the best trigger for deployment later
-  # For now, assume that the conda channel has been updated with a new, undeployed version of payu
-  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'env.yml'
 jobs:
   setup-deployment-env:
     name: Setup Deployment Environment
