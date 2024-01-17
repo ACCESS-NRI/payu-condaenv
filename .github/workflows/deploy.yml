@@ -103,6 +103,7 @@ jobs:
           fi
           tar -xzf ${{ vars.PACK_LOCATION }}/${{ env.NAME }}.tar.gz -C ${{ env.PAYU_ENVIRONMENT_LOCATION }}
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/activate
+          conda-unpack
           payu --version
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/deactivate
           ln -s ${{ vars.MODULE_LOCATION }}/.common ${{ vars.MODULE_LOCATION }}/${{ env.VERSION }}
