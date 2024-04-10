@@ -1,0 +1,90 @@
+name: Deploy Dev Enviroment
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'env-dev.yml'
+  # TODO: Figure out an automatic trigger. Using manual trigger for now
+  workflow_dispatch:
+env:
+    NAME: payu-dev
+    VERSION: dev
+jobs:
+  pack:
+    name: Pack Payu
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1.7.0
+        with:
+          micromamba-version: '1.5.3-0'
+          environment-file: env.yml
+          environment-name: ${{ env.NAME }}
+          generate-run-shell: true
+
+      - name: Create Pack and Lockfile
+        shell: micromamba-shell {0}
+        run: |
+          conda pack
+          conda-lock lock --file env.yml --platform linux-64 --micromamba --lockfile ${{ env.NAME }}.conda-lock.yml
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.NAME }}
+          if-no-files-found: error
+          path: |
+            ${{ env.NAME }}.tar.gz
+            ${{ env.NAME }}.conda-lock.yml
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - pack
+    environment: Gadi
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v3.0.2
+        with:
+          name: ${{ env.NAME }}
+
+      - uses: access-nri/actions/.github/actions/setup-ssh@main
+        id: ssh
+        with:
+          hosts: |
+            ${{ secrets.HOST_DATA }}
+            ${{ secrets.HOST }}
+          private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Copy to Gadi 
+        run: |
+          rsync -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
+            ${{ env.NAME }}.tar.gz \
+            ${{ secrets.USER }}@${{ secrets.HOST_DATA }}:${{ vars.PACK_LOCATION }}
+
+      - name: Deploy to Gadi
+        env:
+          PAYU_ENVIRONMENT_LOCATION: ${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}/${{ env.VERSION }}
+        run: |
+          ssh ${{ secrets.USER }}@${{ secrets.HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash <<'EOT'
+          
+          # Remove previous enviroment if it exists
+          if [ -d ${{ env.PAYU_ENVIRONMENT_LOCATION }} ]; then
+            rm -rf ${{ env.PAYU_ENVIRONMENT_LOCATION }}
+          fi
+        
+          # Unpack conda enviroment
+          mkdir ${{ env.PAYU_ENVIRONMENT_LOCATION }}
+          tar -xzf ${{ vars.PACK_LOCATION  }}/${{ env.NAME }}.tar.gz -C ${{ env.PAYU_ENVIRONMENT_LOCATION }}
+          source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/activate
+          conda-unpack
+          payu --version
+          source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/deactivate
+
+          # Setup modulefile symlink
+          ln -s ${{ vars.MODULE_LOCATION }}/.common ${{ vars.PRERELEASE_MODULE_LOCATION }}/${{ env.VERSION }}
+          EOT

@@ -1,0 +1,19 @@
+name: env-dev.yml
+on:
+  pull_request:
+    paths:
+      - 'env-dev.yml'
+jobs:
+  check:
+    name: Check Env Dev
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Env-dev Valid
+        uses: mamba-org/setup-micromamba@v1.7.0
+        with:
+          micromamba-version: '1.5.3-0'
+          environment-file: env.yml
+          environment-name: test-payu-environment-dev
+          generate-run-shell: false
