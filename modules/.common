@@ -9,8 +9,16 @@ conflict payu
 # Name of this module's environment, e.g. payu/VERSION
 set payuname [module-info name]
 
+# Check if modulefile is in prerelease folder
+if {[string match "/g/data/vk83/prerelease/*" "$ModulesCurrentModulefile"]} {
+    set is_prerelease true
+} else {
+    set is_prerelease false
+}
+
 # Get the environment variables from activate script
-set payuenv [exec /bin/env -i /g/data/vk83/modules/payu/env.sh $payuname]
+set payuenv [exec /bin/env -i \ 
+    /g/data/vk83/modules/payu/env.sh $payuname $is_prerelease]
 
 # Convert the environment into module commands
 set lines [split $payuenv '\n']
