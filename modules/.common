@@ -46,3 +46,6 @@ foreach line $lines {
 }
 
 setenv LC_ALL en_AU.utf8
+
+# Disable including libraries from ~/.local
+setenv PYTHONNOUSERSITE x
