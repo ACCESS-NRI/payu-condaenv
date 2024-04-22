@@ -11,9 +11,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Env-dev Valid
-        uses: mamba-org/setup-micromamba@v1.7.0
+        uses: mamba-org/setup-micromamba@422500192359a097648154e8db4e39bdb6c6eed7 #v1.8.1
         with:
           micromamba-version: '1.5.3-0'
-          environment-file: env.yml
+          environment-file: env-dev.yml
           environment-name: test-payu-environment-dev
           generate-run-shell: false

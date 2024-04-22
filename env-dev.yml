@@ -5,11 +5,12 @@ channels:
   - conda-forge
 dependencies:
   # Use latest changes from payu's master branch
-  - pip
-    - git+git://github.com/payu-org/payu@master
+  - pip:
+    - git+https://github.com/payu-org/payu.git
   - coecms::f90nml
   - conda-lock
   - conda-pack
+  - squashfs-tools
   - gh
   - git
   - nco
