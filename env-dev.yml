@@ -1,4 +1,4 @@
-name: payu
+name: payu-dev
 channels:
   - accessnri
   - coecms
@@ -6,11 +6,10 @@ channels:
 dependencies:
   # Use latest changes from payu's master branch
   - pip:
-    - git+https://github.com/payu-org/payu.git
+    - git+https://github.com/payu-org/payu.git@master
   - coecms::f90nml
   - conda-lock
   - conda-pack
-  - squashfs-tools
   - gh
   - git
   - nco
