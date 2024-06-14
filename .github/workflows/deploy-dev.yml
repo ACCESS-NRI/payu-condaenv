@@ -1,7 +1,7 @@
 name: Deploy Dev Enviroment
 on:
 #  schedule:
-#    - cron: '0 * * * *' # Runs every hour
+#    - cron: '0 * * * *' # Runs every hour #TODO: Figure out cron
   push:
     branches:
       - main
@@ -77,9 +77,9 @@ jobs:
           # Set version to datetime and last short commit hash of payu
           NOW=$(date -u +"%Y%m%dT%H%M%SZ")
           COMMIT_HASH=${{ needs.check-for-payu-updates.outputs.last-commit-hash }}
-          VERSION="$NOW-$COMMIT_HASH"
+          VERSION="dev-$NOW-$COMMIT_HASH"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "name=payu-dev-$VERSION" >> $GITHUB_OUTPUT
+          echo "name=payu-$VERSION" >> $GITHUB_OUTPUT
 
       - name: Setup Micromamba
         uses: mamba-org/setup-micromamba@422500192359a097648154e8db4e39bdb6c6eed7 #v1.8.1
@@ -131,22 +131,55 @@ jobs:
       - name: Deploy to Gadi
         env:
           PAYU_ENVIRONMENT_LOCATION: ${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}/${{ env.VERSION }}
+          PAYU_ENVIRONMENT_SYMLINK: ${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}/dev
+          PAYU_MODULE_SYMLINK: ${{ vars.PRERELEASE_MODULE_LOCATION }}/dev
+          PAYU_PACKED_ENVIRONMENT: ${{ vars.PRERELEASE_PACK_LOCATION }}/${{ env.NAME }}.tar.gz
         run: |
           ssh ${{ secrets.USER }}@${{ secrets.HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash <<'EOT'
-          
-          # Remove previous enviroment if it exists
-          if [ -d ${{ env.PAYU_ENVIRONMENT_LOCATION }} ]; then
-            rm -rf ${{ env.PAYU_ENVIRONMENT_LOCATION }}
-          fi
+
+          # Create list of previous payu/dev environments to remove later
+          old_versions=$(ls "${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}" | grep -E '^dev-[0-9]{8}T[0-9]{6}Z-.*')
         
           # Unpack conda enviroment
           mkdir ${{ env.PAYU_ENVIRONMENT_LOCATION }}
-          tar -xzf ${{ vars.PACK_LOCATION  }}/${{ env.NAME }}.tar.gz -C ${{ env.PAYU_ENVIRONMENT_LOCATION }}
+          if [ $? -ne 0 ]; then
+            exit $?
+          fi
+          tar -xzf ${{ env.PAYU_PACKED_ENVIRONMENT }} -C ${{ env.PAYU_ENVIRONMENT_LOCATION }}
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/activate
           conda-unpack
           payu --version
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/deactivate
+          echo "New payu/dev environment unpacked to ${{ env.PAYU_ENVIRONMENT_LOCATION }}"
+
+          # Check if payu/dev symlink already exists
+          if [ -L "${{ env.PAYU_ENVIRONMENT_SYMLINK}}"]; then
+            # Get previous version  of payu/dev
+            previous_env_path=$(readlink -f "${{ env.PAYU_ENVIRONMENT_SYMLINK}}")
+            previous_ver=$(basename "$previous_env_path")
+            echo "Previous payu/dev version $previous_ver"
+
+            # Remove previous version from old versions - to ensure active
+            # environments at time of deployment are not deleted
+            old_versions=$(echo "$old_versions" | grep -v "$previous_ver")
+
+            # Unlink the symlink
+            unlink ${{ env.PAYU_ENVIRONMENT_SYMLINK}}
+          fi
+
+          # Create the payu/dev symlink in pre-release apps
+          ln -s ${{ env.PAYU_ENVIRONMENT_LOCATION }} ${{ env.PAYU_ENVIRONMENT_SYMLINK }}
 
           # Setup modulefile symlink
-          ln -s ${{ vars.MODULE_LOCATION }}/.common ${{ vars.PRERELEASE_MODULE_LOCATION }}/${{ env.VERSION }}
+          ln -sf ${{ vars.MODULE_LOCATION }}/.common ${{ env.PAYU_MODULE_SYMLINK }}
+
+          # Remove old versions of environments
+          for version in $old_versions; do
+              echo "Removing old payu/dev environment version $version"
+              rm -rf "${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}/$version"
+          done
+
+          # Remove packed environment file
+          echo "Removing conda-packed environment file ${{ env.PAYU_PACKED_ENVIRONMENT }}"
+          rm -rf ${{ env.PAYU_PACKED_ENVIRONMENT }}
           EOT
