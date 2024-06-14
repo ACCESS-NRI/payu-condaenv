@@ -130,10 +130,10 @@ jobs:
 
       - name: Deploy to Gadi
         env:
-          PAYU_ENVIRONMENT_LOCATION: ${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}/${{ env.VERSION }}
-          PAYU_ENVIRONMENT_SYMLINK: ${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}/dev
-          PAYU_MODULE_SYMLINK: ${{ vars.PRERELEASE_MODULE_LOCATION }}/dev
-          PAYU_PACKED_ENVIRONMENT: ${{ vars.PRERELEASE_PACK_LOCATION }}/${{ env.NAME }}.tar.gz
+          ENVIRONMENT_LOCATION: ${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}/${{ env.VERSION }}
+          ENVIRONMENT_SYMLINK: ${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}/dev
+          MODULE_SYMLINK: ${{ vars.PRERELEASE_MODULE_LOCATION }}/dev
+          PACKED_ENVIRONMENT: ${{ vars.PRERELEASE_PACK_LOCATION }}/${{ env.NAME }}.tar.gz
         run: |
           ssh ${{ secrets.USER }}@${{ secrets.HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash <<'EOT'
 
@@ -141,21 +141,21 @@ jobs:
           old_versions=$(ls "${{ vars.PRERELEASE_DEPLOYMENT_LOCATION }}" | grep -E '^dev-[0-9]{8}T[0-9]{6}Z-.*')
         
           # Unpack conda enviroment
-          mkdir ${{ env.PAYU_ENVIRONMENT_LOCATION }}
+          mkdir ${{ env.ENVIRONMENT_LOCATION }}
           if [ $? -ne 0 ]; then
             exit $?
           fi
-          tar -xzf ${{ env.PAYU_PACKED_ENVIRONMENT }} -C ${{ env.PAYU_ENVIRONMENT_LOCATION }}
-          source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/activate
+          tar -xzf ${{ env.PACKED_ENVIRONMENT }} -C ${{ env.ENVIRONMENT_LOCATION }}
+          source ${{ env.ENVIRONMENT_LOCATION }}/bin/activate
           conda-unpack
           payu --version
-          source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/deactivate
-          echo "New payu/dev environment unpacked to ${{ env.PAYU_ENVIRONMENT_LOCATION }}"
+          source ${{ env.ENVIRONMENT_LOCATION }}/bin/deactivate
+          echo "New payu/dev environment unpacked to ${{ env.ENVIRONMENT_LOCATION }}"
 
           # Check if payu/dev symlink already exists
-          if [ -L "${{ env.PAYU_ENVIRONMENT_SYMLINK}}" ]; then
+          if [ -L "${{ env.ENVIRONMENT_SYMLINK}}" ]; then
             # Get previous version  of payu/dev
-            previous_env_path=$(readlink -f "${{ env.PAYU_ENVIRONMENT_SYMLINK}}")
+            previous_env_path=$(readlink -f "${{ env.ENVIRONMENT_SYMLINK}}")
             previous_ver=$(basename "$previous_env_path")
             echo "Previous payu/dev version $previous_ver"
 
@@ -164,14 +164,14 @@ jobs:
             old_versions=$(echo "$old_versions" | grep -v "$previous_ver")
 
             # Unlink the symlink
-            unlink ${{ env.PAYU_ENVIRONMENT_SYMLINK}}
+            unlink ${{ env.ENVIRONMENT_SYMLINK}}
           fi
 
           # Create the payu/dev symlink in pre-release apps
-          ln -s ${{ env.PAYU_ENVIRONMENT_LOCATION }} ${{ env.PAYU_ENVIRONMENT_SYMLINK }}
+          ln -s ${{ env.ENVIRONMENT_LOCATION }} ${{ env.ENVIRONMENT_SYMLINK }}
 
           # Setup modulefile symlink
-          ln -sf ${{ vars.PRERELEASE_MODULE_LOCATION }}/.common ${{ env.PAYU_MODULE_SYMLINK }}
+          ln -sf ${{ vars.PRERELEASE_MODULE_LOCATION }}/.common ${{ env.MODULE_SYMLINK }}
 
           # Remove old versions of environments
           for version in $old_versions; do
@@ -180,6 +180,6 @@ jobs:
           done
 
           # Remove packed environment file
-          echo "Removing conda-packed environment file ${{ env.PAYU_PACKED_ENVIRONMENT }}"
-          rm -rf ${{ env.PAYU_PACKED_ENVIRONMENT }}
+          echo "Removing conda-packed environment file ${{ env.PACKED_ENVIRONMENT }}"
+          rm -rf ${{ env.PACKED_ENVIRONMENT }}
           EOT
