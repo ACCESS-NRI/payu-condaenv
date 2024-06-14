@@ -153,7 +153,7 @@ jobs:
           echo "New payu/dev environment unpacked to ${{ env.PAYU_ENVIRONMENT_LOCATION }}"
 
           # Check if payu/dev symlink already exists
-          if [ -L "${{ env.PAYU_ENVIRONMENT_SYMLINK}}"]; then
+          if [ -L "${{ env.PAYU_ENVIRONMENT_SYMLINK}}" ]; then
             # Get previous version  of payu/dev
             previous_env_path=$(readlink -f "${{ env.PAYU_ENVIRONMENT_SYMLINK}}")
             previous_ver=$(basename "$previous_env_path")
@@ -171,7 +171,7 @@ jobs:
           ln -s ${{ env.PAYU_ENVIRONMENT_LOCATION }} ${{ env.PAYU_ENVIRONMENT_SYMLINK }}
 
           # Setup modulefile symlink
-          ln -sf ${{ vars.MODULE_LOCATION }}/.common ${{ env.PAYU_MODULE_SYMLINK }}
+          ln -sf ${{ vars.PRERELEASE_MODULE_LOCATION }}/.common ${{ env.PAYU_MODULE_SYMLINK }}
 
           # Remove old versions of environments
           for version in $old_versions; do
