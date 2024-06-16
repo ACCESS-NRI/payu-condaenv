@@ -1,7 +1,7 @@
 name: Deploy Dev Enviroment
 on:
-#  schedule:
-#    - cron: '0 * * * *' # Runs every hour #TODO: Figure out cron
+  schedule:
+   - cron: '0 21 * * *' # Runs every morning at 7AM AEST
   push:
     branches:
       - main
