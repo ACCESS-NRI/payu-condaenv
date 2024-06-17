@@ -1,0 +1,17 @@
+name: payu-dev
+channels:
+  - accessnri
+  - coecms
+  - conda-forge
+dependencies:
+  # Use latest changes from payu's master branch
+  - pip:
+    - git+https://github.com/payu-org/payu.git@master
+  - coecms::f90nml
+  - conda-lock
+  - conda-pack
+  - gh
+  - git
+  - nco
+  - pytest
+  - openssh>=8.3

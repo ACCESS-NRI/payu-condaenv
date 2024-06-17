@@ -10,7 +10,7 @@ conflict payu
 set payuname [module-info name]
 
 # Get the environment variables from activate script
-set payuenv [exec /bin/env -i /g/data/vk83/modules/payu/env.sh $payuname]
+set payuenv [exec /bin/env -i {{MODULE_LOCATION}}/env.sh $payuname]
 
 # Convert the environment into module commands
 set lines [split $payuenv '\n']
