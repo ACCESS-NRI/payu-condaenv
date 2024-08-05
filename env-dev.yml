@@ -4,6 +4,7 @@ channels:
   - coecms
   - conda-forge
 dependencies:
+  - python>=3.10
   # Use latest changes from payu's master branch
   - pip:
     - git+https://github.com/payu-org/payu.git@master
