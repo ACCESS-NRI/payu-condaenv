@@ -16,3 +16,4 @@ dependencies:
   - nco
   - pytest
   - openssh>=8.3
+  - xarray
