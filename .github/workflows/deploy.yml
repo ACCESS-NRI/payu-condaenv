@@ -99,14 +99,17 @@ jobs:
           ssh ${{ secrets.USER }}@${{ secrets.HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash <<'EOT'
           mkdir ${{ env.PAYU_ENVIRONMENT_LOCATION }}
           if [ $? -ne 0 ]; then
-            exit $?
+            # Replace pre-existing environment
+            echo "Removing pre-existing environment at: ${{ env.PAYU_ENVIRONMENT_LOCATION }}"
+            rm -rf "${{ env.PAYU_ENVIRONMENT_LOCATION }}"
+            mkdir ${{ env.PAYU_ENVIRONMENT_LOCATION }}
           fi
           tar -xzf ${{ vars.PACK_LOCATION }}/${{ env.NAME }}.tar.gz -C ${{ env.PAYU_ENVIRONMENT_LOCATION }}
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/activate
           conda-unpack
           payu --version
           source ${{ env.PAYU_ENVIRONMENT_LOCATION }}/bin/deactivate
-          ln -s ${{ vars.MODULE_LOCATION }}/.common ${{ vars.MODULE_LOCATION }}/${{ env.VERSION }}
+          ln -sf ${{ vars.MODULE_LOCATION }}/.common ${{ vars.MODULE_LOCATION }}/${{ env.VERSION }}
           EOT
 
       # Release
