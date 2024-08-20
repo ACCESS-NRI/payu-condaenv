@@ -1,13 +1,13 @@
 name: payu-dev
 channels:
   - accessnri
+  - coecms
   - conda-forge
 dependencies:
   - python==3.10
   # Use latest changes from payu's master branch
   - pip:
     - git+https://github.com/payu-org/payu.git@master
-    - mule @ git+https://github.com/metomi/mule@cce4b99c7046217b1ec1192118a786636e0d8e54#subdirectory=mule
   - f90nml
   - conda-lock
   - conda-pack
@@ -17,3 +17,4 @@ dependencies:
   - pytest
   - openssh>=8.3
   - xarray
+  - mule
