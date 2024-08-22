@@ -18,3 +18,4 @@ dependencies:
   - openssh>=8.3
   - xarray
   - mule
+  - um2nc
