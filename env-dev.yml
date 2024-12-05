@@ -19,3 +19,4 @@ dependencies:
   - xarray
   - mule
   - um2nc
+  - accessnri::yamanifest
