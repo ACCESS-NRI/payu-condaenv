@@ -1,5 +1,8 @@
 # payu-condaenv
 
+> [!NOTE]
+> Containerised conda environments for payu are now being deployed in [ACCESS-NRI/model-release-condaenv](https://github.com/ACCESS-NRI/model-release-condaenv) so any issues with payu module versions from `1.1.6` onwards should be created there.
+
 ## Overview
 
 This repository is responsible for building, packaging and deploying [`payu`](https://github.com/payu-org/payu) as a [`micromamba` environment](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
